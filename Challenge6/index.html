@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Owned Property in Two Cities of Georgia, USA by Chay Thawaranont</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            shape-rendering: crispEdges;
+            stroke: black;
+        }
+
+        .bar.yellow {
+            fill: #5A7FA3;
+            /* opacity: 0.7; */
+        }
+
+        .bar.blue {
+            fill: #E3A72F;
+            /* opacity: 0.7; */
+        }
+
+        .bar-line {
+            stroke: #A1171D;
+            stroke-width: 2.5;
+            stroke-dasharray: 4;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+        }
+
+        .layout {
+            align-content: space-evenly;
+        }
+
+        h1 {
+            margin-left: 2vw;
+            font-size: 30px;
+        }
+
+        p {
+            margin-left: 2vw;
+            font-size: 15px;
+        }
+
+        .year-label {
+            font-size: 40px;
+            font-weight: bold;
+            fill: #A1171D;
+        }
+
+        .y-axis-header {
+            font-size: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Black Owned Property in Two Cities of Georgia, USA</h1>
+    <p>A recreation of W.E.B Du Bois's chart in the 1900 Paris Exposition by Chay Thawaranont.</p>
+    <div class="layout">
+        <svg width="600" height="400"></svg>
+    </div>
+    <script>
+
+        const data = [
+            { city: "Savannah", year: 1880, x: 699, y: 194392 },
+            { city: "Savannah", year: 1890, x: 1387, y: 550145 },
+            { city: "Savannah", year: 1898, x: 2157, y: 872737 },
+            { city: "Atlanta", year: 1880, x: 639, y: 227955 },
+            { city: "Atlanta", year: 1890, x: 1120, y: 78256 },
+            { city: "Atlanta", year: 1898, x: 1112, y: 1308995 }
+        ];
+
+        const width = 800;
+        const height = 600;
+        const margin = { top: 30, right: 80, bottom: 50, left: 90 };
+
+        const svg = d3.select("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        svg.append("circle").attr("cx", margin.left).attr("cy", margin.top - 20).attr("r", 6).style("fill", "#E3A72F")
+        svg.append("circle").attr("cx", margin.left + 100).attr("cy", margin.top - 20).attr("r", 6).style("fill", "#5A7FA3")
+        svg.append("text").attr("x", margin.left + 10).attr("y", margin.top - 20).text("Atlanta").style("font-size", "15px").attr("alignment-baseline", "middle")
+        svg.append("text").attr("x", margin.left + 110).attr("y", margin.top - 20).text("Savannah").style("font-size", "15px").attr("alignment-baseline", "middle")
+
+        svg.append("text").attr("x", -300)
+            .attr("y", 25)
+            .text("Property Value")
+            .attr("alignment-baseline", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("class", "y-axis-header");
+
+
+        svg.append("text").attr("x", (width / 2) - 50)
+            .attr("y", height - 20)
+            .text("Black Owned Property")
+            .attr("alignment-baseline", "middle")
+            .attr("class", "y-axis-header");
+
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.x)])
+            .range([margin.left, width - margin.right]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.y)])
+            .range([height - margin.bottom, margin.top]);
+
+        const xAxis = svg.append("g")
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("class", "axis")
+            .style("opacity", 0);
+
+        const yAxis = svg.append("g")
+            .attr("transform", `translate(${margin.left},0)`)
+            .attr("class", "axis")
+            .style("opacity", 0);
+
+        const yearLabel = svg.append("text")
+            .attr("class", "year-label")
+            .attr("x", margin.left + 500)
+            .attr("y", 50 + margin.top)
+            .style("opacity", 0);
+
+        let yearIndex = 0;
+        function updateChart() {
+            const currentYear = [1880, 1890, 1898][yearIndex % 3];
+            const filteredData = data.filter(d => d.year === currentYear);
+
+            const bars = svg.selectAll("rect").data(filteredData);
+
+            bars.enter()
+                .append("rect")
+                .merge(bars)
+                .transition().duration(2000)
+                .attr("x", margin.left)
+                .attr("y", d => yScale(d.y))
+                .attr("width", d => xScale(d.x) - margin.left)
+                .attr("height", d => height - margin.bottom - yScale(d.y))
+                .attr("class", (d, i) => i % 2 === 0 ? "bar yellow" : "bar blue");
+
+            bars.exit().remove();
+
+
+            svg.selectAll(".bar-line").remove();
+            filteredData.forEach(d => {
+                // if (d.x === Math.max(...filteredData.map(b => b.x))) {
+                svg.append("line")
+                    .attr("class", "bar-line")
+                    .transition()
+                    .duration(750)
+                    .attr("x1", margin.left)
+                    .attr("y1", yScale(d.y))
+                    .attr("x2", margin.left + (xScale(d.x) - margin.left))
+                    .attr("y2", yScale(d.y));
+                // }
+            });
+
+            xAxis.transition().duration(2000)
+                .call(d3.axisBottom(xScale)
+                    .tickValues(filteredData.map(d => d.x))
+                    .tickFormat(d => d3.format(",.2r")(d)))
+                .style("opacity", 1);
+
+            yAxis.transition().duration(2000)
+                .call(d3.axisLeft(yScale)
+                    .tickValues(filteredData.map(d => d.y))
+                    .tickFormat(d => "$" + d3.format(",.2r")(d)))
+                .style("opacity", 1);
+
+            yearLabel.transition().duration(2000)
+                .text("Year " + currentYear)
+                .style("opacity", 1);
+
+            yearIndex++;
+            setTimeout(updateChart, 3500);
+        }
+
+        updateChart();
+    </script>
+</body>
+
+</html>
